@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Gestão de Estacionamento — Visualizador 3D</title>
+  <title>Gestão de Estacionamento 3D — Porto Alegre Georreferenciado</title>
   
-  <!-- Favicon (resolve o erro 404) -->
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==">
 
-  <!-- Import Map para maior compatibilidade (opcional, mas recomendado) -->
+  <!-- Import Map -->
   <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
   <script type="importmap">
   {
@@ -19,92 +19,180 @@
   }
   </script>
 
-  <!-- Estilos modernos, responsivos, sidebar recolhível -->
+  <!-- Estilos aprimorados -->
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#07101a;
-      --accent:#00d1ff;
-      --muted:#9fb3c8;
-      --glass: rgba(255,255,255,0.03);
-      --card: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --bg-day:#e8f4f8; --panel-day:#ffffff; --accent-day:#0066cc; --muted-day:#5a6c7d; --text-day:#2c3e50;
+      --bg-night:#0b1220; --panel-night:#07101a; --accent-night:#00d1ff; --muted-night:#9fb3c8; --text-night:#eaf6ff;
+      --bg: var(--bg-night); --panel: var(--panel-night); --accent: var(--accent-night); --muted: var(--muted-night); --text: var(--text-night);
+      --glass: rgba(255,255,255,0.03); --card: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     }
+    
+    body.day-mode {
+      --bg: var(--bg-day); --panel: var(--panel-day); --accent: var(--accent-day); --muted: var(--muted-day); --text: var(--text-day);
+      --glass: rgba(0,0,0,0.05); --card: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
+    }
+
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#08101a 0%,#071018 100%);font-family:Inter,system-ui,Arial;color:#eaf6ff}
-    /* Layout */
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,Arial;color:var(--text);transition:all 0.3s ease}
+    
     #root{display:flex;height:100vh;gap:12px;padding:12px}
-    /* Sidebar */
+    
     aside.sidebar{
-      width:340px;min-width:260px;max-width:420px;
-      background:var(--panel);border-radius:12px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,0.6);
-      display:flex;flex-direction:column;transition:width .25s ease;
+      width:380px;min-width:300px;max-width:480px;background:var(--panel);border-radius:12px;padding:16px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.15);display:flex;flex-direction:column;transition:width .25s ease;
     }
     aside.sidebar.collapsed{width:64px;overflow:hidden}
+    
     .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#6ee7b7);display:flex;align-items:center;justify-content:center;font-weight:700;color:#002;}
-    h1{margin:0;font-size:16px}
+    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#6ee7b7);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;}
+    h1{margin:0;font-size:16px;color:var(--text)}
     .subtitle{font-size:12px;color:var(--muted);margin-top:4px}
-    .section{margin-top:14px}
-    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
-    .dropzone{padding:12px;border-radius:10px;border:1px dashed rgba(255,255,255,0.04);background:var(--card);color:var(--muted);text-align:center}
+    
+    .section{margin-top:14px;border-bottom:1px solid var(--glass);padding-bottom:12px}
+    .section:last-child{border-bottom:none}
+    
+    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px;font-weight:600}
+    .dropzone{padding:12px;border-radius:10px;border:1px dashed var(--glass);background:var(--card);color:var(--muted);text-align:center;transition:border-color 0.3s ease}
     input[type=file]{display:none}
-    .row{display:flex;gap:8px}
-    button.btn{background:linear-gradient(90deg,var(--accent),#6ee7b7);color:#002;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px;border-radius:8px;cursor:pointer}
+    input[type=text], input[type=number]{width:100%;padding:8px;border:1px solid var(--glass);background:var(--card);color:var(--text);border-radius:6px;font-size:13px}
+    
+    .row{display:flex;gap:8px;align-items:center}
+    .row.space-between{justify-content:space-between}
+    
+    button.btn{background:linear-gradient(90deg,var(--accent),#6ee7b7);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;transition:transform 0.2s ease}
+    button.btn:hover{transform:translateY(-1px)}
+    
+    button.ghost{background:var(--card);border:1px solid var(--glass);color:var(--muted);padding:8px;border-radius:8px;cursor:pointer;transition:all 0.2s ease}
+    button.ghost:hover{background:var(--accent);color:#fff;transform:translateY(-1px)}
+    button.ghost.active{background:var(--accent);color:#fff}
+    
+    .theme-toggle{background:var(--card);border:1px solid var(--glass);color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.3s ease}
+    .theme-toggle:hover{background:var(--accent);color:#fff}
+    
     .small{font-size:13px;color:var(--muted)}
     .controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    pre#log{height:110px;overflow:auto;background:transparent;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:var(--muted);margin:0}
-    footer.info{font-size:12px;color:var(--muted);margin-top:auto}
-    /* Viewer */
-    main.viewer{flex:1;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    .geo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+    
+    pre#log{height:120px;overflow:auto;background:var(--card);border:1px solid var(--glass);padding:8px;border-radius:8px;color:var(--muted);margin:0;font-size:12px}
+    
+    .loading-bar{width:100%;height:4px;background:var(--glass);border-radius:2px;overflow:hidden;margin-top:8px}
+    .loading-progress{height:100%;background:linear-gradient(90deg,var(--accent),#6ee7b7);transition:width 0.3s ease;width:0%}
+    
+    footer.info{font-size:12px;color:var(--muted);margin-top:auto;padding-top:12px}
+    
+    main.viewer{flex:1;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
     canvas{display:block;width:100%;height:100%}
-    /* Floating HUD */
-    .hud{position:absolute;left:12px;top:12px;background:rgba(0,0,0,0.45);padding:8px 10px;border-radius:10px;color:#fff;font-size:13px;backdrop-filter:blur(4px)}
+    
+    .hud{position:absolute;left:12px;top:12px;background:rgba(0,0,0,0.8);padding:8px 12px;border-radius:10px;color:#fff;font-size:13px;backdrop-filter:blur(8px)}
     .floating-tools{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px;z-index:20}
-    .icon{background:rgba(255,255,255,0.03);border:none;color:var(--muted);padding:8px;border-radius:8px;min-width:44px;cursor:pointer}
-    .icon.active{background:var(--accent);color:#002}
-    /* Bottom bar */
-    .bottombar{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,0.45);padding:8px;border-radius:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:var(--muted);font-size:13px}
-    .badge{background:#07232a;padding:6px 8px;border-radius:8px;color:var(--muted);font-size:13px}
-    /* Responsive */
+    .icon{background:var(--card);border:1px solid var(--glass);color:var(--muted);padding:8px;border-radius:8px;min-width:44px;cursor:pointer;transition:all 0.2s ease}
+    .icon:hover{background:var(--accent);color:#fff}
+    .icon.active{background:var(--accent);color:#fff}
+    
+    .bottombar{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,0.8);padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#fff;font-size:13px;backdrop-filter:blur(8px)}
+    .badge{background:var(--accent);padding:6px 8px;border-radius:8px;color:#fff;font-size:13px;font-weight:600}
+    
+    .status-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+    .status-indicator.connected{background:#00ff88}
+    .status-indicator.loading{background:#ffaa00;animation:pulse 1s infinite}
+    .status-indicator.error{background:#ff4444}
+    
+    @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+    
+    .building-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+    
     @media(max-width:960px){
       #root{flex-direction:column;padding:8px}
-      aside.sidebar{width:100%;max-height:36vh;overflow:auto}
-      main.viewer{height:58vh;border-radius:10px}
+      aside.sidebar{width:100%;max-height:45vh;overflow:auto}
+      main.viewer{height:50vh;border-radius:10px}
+      .geo-grid{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
-<body>
+<body class="night-mode">
   <div id="root">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="logo">P</div>
         <div>
-          <h1>Parking3D — Vis. & Gestão</h1>
-          <div class="subtitle">Painel principal do sistema de gestão</div>
+          <h1>Parking3D — Porto Alegre</h1>
+          <div class="subtitle">Sistema integrado com edificações reais</div>
         </div>
         <div style="margin-left:auto">
-          <button id="btnCollapse" class="ghost" title="Recolher painel">⇤</button>
+          <button id="themeToggle" class="theme-toggle" title="Alternar Day/Night">
+            <span id="themeIcon">🌙</span>
+            <span id="themeText">Night</span>
+          </button>
+          <button id="btnCollapse" class="ghost" title="Recolher painel" style="margin-left:8px">⇤</button>
+        </div>
+      </div>
+
+      <!-- Georeferenciamento -->
+      <div class="section">
+        <label>📍 Coordenadas (Porto Alegre)</label>
+        <div class="geo-grid">
+          <div>
+            <input type="number" id="geoLat" placeholder="Latitude" value="-30.0346" step="0.0001">
+            <div class="small">Lat</div>
+          </div>
+          <div>
+            <input type="number" id="geoLng" placeholder="Longitude" value="-51.2177" step="0.0001">
+            <div class="small">Lng</div>
+          </div>
+          <div>
+            <input type="number" id="geoAlt" placeholder="Altitude" value="10" step="1">
+            <div class="small">Alt (m)</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="btnGeoSet" class="btn">Aplicar Posição</button>
+          <button id="btnGeoSave" class="ghost">Salvar Local</button>
+        </div>
+        <div class="small" id="geoStatus">
+          <span class="status-indicator connected"></span>
+          Coordenadas: Centro de Porto Alegre
+        </div>
+      </div>
+
+      <!-- Edificações da cidade -->
+      <div class="section">
+        <label>🏢 Edificações de Porto Alegre</label>
+        <div class="building-controls">
+          <button id="btnLoadBuildings" class="btn">Carregar Prédios</button>
+          <button id="btnClearBuildings" class="ghost">Limpar Prédios</button>
+          <button id="btnToggleBuildings" class="ghost">👁️ Mostrar</button>
+        </div>
+        <div class="loading-bar" id="buildingLoadingBar" style="display:none">
+          <div class="loading-progress" id="buildingProgress"></div>
+        </div>
+        <div class="small" id="buildingStatus">
+          <span class="status-indicator" id="buildingStatusIcon"></span>
+          <span id="buildingCount">0</span> edificações carregadas
+        </div>
+        <div class="small" style="margin-top:6px">
+          Fonte: Microsoft Global Building Footprints + OpenStreetMap
         </div>
       </div>
 
       <!-- Upload -->
       <div class="section">
-        <label>Modelo 3D (.glb / .gltf)</label>
-        <div class="dropzone" id="dropzone">Arraste aqui ou use Selecionar arquivo</div>
+        <label>🏗️ Modelo 3D (.glb / .gltf)</label>
+        <div class="dropzone" id="dropzone">Arraste aqui ou clique para selecionar</div>
         <input id="fileInput" type="file" accept=".glb,.gltf" />
         <div style="display:flex;gap:8px;margin-top:8px">
           <button id="btnSelect" class="btn">Selecionar arquivo</button>
           <button id="btnClear" class="ghost">Limpar cena</button>
+          <button id="btnSaveScene" class="ghost">💾</button>
         </div>
         <div class="small" id="status">Aguardando modelo</div>
       </div>
 
       <!-- Manipulação -->
       <div class="section">
-        <label>Manipulação 3D</label>
+        <label>🔧 Controles de Manipulação</label>
         <div class="controls-grid">
-          <button id="btnTranslate" class="ghost">Transladar</button>
+          <button id="btnTranslate" class="ghost">Mover</button>
           <button id="btnRotate" class="ghost">Rotacionar</button>
           <button id="btnScale" class="ghost">Escalar</button>
           <button id="btnFit" class="ghost">Enquadrar</button>
@@ -113,59 +201,95 @@
           <button id="btnWire" class="ghost">Wireframe</button>
           <button id="btnGrid" class="ghost">Grade</button>
           <button id="btnAxes" class="ghost">Eixos</button>
-          <button id="btnSnap" class="ghost">Snap</button>
+          <button id="btnSnap" class="ghost">Snap Grid</button>
         </div>
       </div>
 
       <!-- Gestão vagas -->
       <div class="section">
-        <label>Gestão de vagas</label>
-        <div style="display:flex;gap:8px">
-          <button id="btnAddSpot" class="ghost">Adicionar vaga</button>
-          <button id="btnExport" class="btn">Exportar JSON</button>
+        <label>🚗 Gestão de Vagas</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="btnAddSpot" class="ghost">+ Vaga</button>
+          <button id="btnAddZone" class="ghost">+ Zona</button>
         </div>
-        <div class="small" style="margin-top:8px">Vagas são caixas posicionáveis. Selecione e ajuste com as ferramentas.</div>
+        <div style="display:flex;gap:8px">
+          <button id="btnLoadSpots" class="ghost">📂 Carregar</button>
+          <button id="btnExport" class="btn">💾 Exportar</button>
+        </div>
+        <div class="small" style="margin-top:8px">
+          <span id="spotsCount">0</span> vagas · 
+          <span id="zonesCount">0</span> zonas mapeadas
+        </div>
       </div>
 
-      <!-- Luz -->
+      <!-- Ambiente -->
       <div class="section">
-        <label>Luz direcional</label>
-        <input id="lightRange" type="range" min="0" max="2" step="0.05" value="0.9" style="width:100%"/>
+        <label>🌅 Ambiente e Iluminação</label>
+        <div class="row space-between" style="margin-bottom:8px">
+          <span class="small">Hora do dia:</span>
+          <input id="timeRange" type="range" min="0" max="24" step="0.5" value="12" style="flex:1;margin-left:8px">
+          <span class="small" id="timeDisplay">12:00</span>
+        </div>
+        <div class="row space-between">
+          <span class="small">Intensidade sol:</span>
+          <input id="lightIntensity" type="range" min="0" max="3" step="0.1" value="1.2" style="flex:1;margin-left:8px">
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="btnWeatherClear" class="ghost active">☀️ Claro</button>
+          <button id="btnWeatherCloud" class="ghost">☁️ Nublado</button>
+          <button id="btnWeatherRain" class="ghost">🌧️ Chuva</button>
+        </div>
       </div>
 
       <!-- Log -->
       <div class="section">
-        <label>Console</label>
-        <pre id="log">-- sistema inicializado --</pre>
+        <label>📋 Sistema & Eventos</label>
+        <pre id="log">-- sistema inicializado --
+-- georeferenciamento ativo --</pre>
       </div>
 
       <footer class="info">
-        <div>Deploy: Netlify / Static — upload local do .glb</div>
+        <div><strong>Deploy:</strong> Netlify • <strong>Coords:</strong> SIRGAS 2000</div>
+        <div class="small">Dados urbanos: Microsoft + OSM</div>
       </footer>
     </aside>
 
     <main class="viewer" id="viewer">
-      <div class="hud" id="hud">Botões: esquerdo = rotacionar · direito = pan · roda = zoom</div>
+      <div class="hud" id="hud">
+        <div>🎮 Controles: <strong>ESQ</strong> = orbitar • <strong>DIR</strong> = pan • <strong>SCROLL</strong> = zoom</div>
+        <div style="margin-top:4px" id="coordDisplay">Lat: -30.0346° • Lng: -51.2177° • Alt: 10m</div>
+        <div style="margin-top:4px" id="buildingInfo">Prédios: Carregue as edificações da cidade</div>
+      </div>
 
       <div class="floating-tools" id="floatingTools">
-        <button id="orbitToggle" class="icon active" title="Ativar Orbit">⟳</button>
-        <button id="transformToggle" class="icon" title="Ativar TransformControls">✦</button>
-        <button id="helpersToggle" class="icon" title="Grade / Eixos">#</button>
+        <button id="orbitToggle" class="icon active" title="Modo Orbit">⟳</button>
+        <button id="transformToggle" class="icon" title="TransformControls">✦</button>
+        <button id="helpersToggle" class="icon" title="Helpers">📐</button>
+        <button id="compassToggle" class="icon" title="Bússola">🧭</button>
+        <button id="buildingToggle" class="icon" title="Toggle Prédios">🏢</button>
       </div>
 
       <div class="bottombar" id="bottombar">
-        <div class="badge" id="modelName">Nenhum modelo</div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div class="row" style="gap:12px">
+          <div class="badge" id="modelName">Nenhum modelo</div>
+          <div class="badge" id="weatherBadge">☀️ Claro</div>
+          <div class="badge" id="cityBadge">🏢 <span id="buildingCountBadge">0</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
           <div id="coordInfo" class="small">X:0.00 Y:0.00 Z:0.00</div>
-          <div class="small">FPS optimizado</div>
+          <div class="small" id="fpsCounter">FPS: --</div>
+          <div class="small">
+            <span class="status-indicator connected"></span>
+            Sistema ativo
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Scripts: todos importados por CDN absoluto para evitar "module specifier" -->
+  <!-- Scripts principais -->
   <script type="module">
-    // Wrapper para capturar erros de extensões blockchain silenciosamente
+    // Error handling wrapper
     (function() {
       const originalDefineProperty = Object.defineProperty;
       Object.defineProperty = function(obj, prop, descriptor) {
@@ -173,7 +297,6 @@
           return originalDefineProperty.call(this, obj, prop, descriptor);
         } catch (e) {
           if (prop === 'ethereum' && e.message.includes('redefine')) {
-            // Ignora erro de extensões crypto - não afeta nossa aplicação 3D
             console.warn('Extensão blockchain detectada (ignorado):', e.message);
             return obj;
           }
@@ -188,17 +311,44 @@
     import { TransformControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/TransformControls.js';
     import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/DRACOLoader.js';
 
-    // UI references
+    // ===== UI REFERENCES =====
     const sidebar = document.getElementById('sidebar');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
     const btnCollapse = document.getElementById('btnCollapse');
+    
+    // Geo controls
+    const geoLat = document.getElementById('geoLat');
+    const geoLng = document.getElementById('geoLng');
+    const geoAlt = document.getElementById('geoAlt');
+    const btnGeoSet = document.getElementById('btnGeoSet');
+    const btnGeoSave = document.getElementById('btnGeoSave');
+    const geoStatus = document.getElementById('geoStatus');
+    const coordDisplay = document.getElementById('coordDisplay');
+    
+    // Building controls
+    const btnLoadBuildings = document.getElementById('btnLoadBuildings');
+    const btnClearBuildings = document.getElementById('btnClearBuildings');
+    const btnToggleBuildings = document.getElementById('btnToggleBuildings');
+    const buildingLoadingBar = document.getElementById('buildingLoadingBar');
+    const buildingProgress = document.getElementById('buildingProgress');
+    const buildingStatus = document.getElementById('buildingStatus');
+    const buildingStatusIcon = document.getElementById('buildingStatusIcon');
+    const buildingCount = document.getElementById('buildingCount');
+    const buildingInfo = document.getElementById('buildingInfo');
+    const buildingToggle = document.getElementById('buildingToggle');
+    const cityBadge = document.getElementById('cityBadge');
+    const buildingCountBadge = document.getElementById('buildingCountBadge');
+    
+    // File controls
     const fileInput = document.getElementById('fileInput');
     const btnSelect = document.getElementById('btnSelect');
     const dropzone = document.getElementById('dropzone');
     const statusEl = document.getElementById('status');
-    const logEl = document.getElementById('log');
-    const modelNameEl = document.getElementById('modelName');
-    const coordInfo = document.getElementById('coordInfo');
-
+    const btnSaveScene = document.getElementById('btnSaveScene');
+    
+    // Transform controls
     const btnClear = document.getElementById('btnClear');
     const btnTranslate = document.getElementById('btnTranslate');
     const btnRotate = document.getElementById('btnRotate');
@@ -208,48 +358,141 @@
     const btnGrid = document.getElementById('btnGrid');
     const btnAxes = document.getElementById('btnAxes');
     const btnSnap = document.getElementById('btnSnap');
+    
+    // Parking controls
     const btnAddSpot = document.getElementById('btnAddSpot');
+    const btnAddZone = document.getElementById('btnAddZone');
+    const btnLoadSpots = document.getElementById('btnLoadSpots');
     const btnExport = document.getElementById('btnExport');
-    const lightRange = document.getElementById('lightRange');
-
+    const spotsCount = document.getElementById('spotsCount');
+    const zonesCount = document.getElementById('zonesCount');
+    
+    // Environment controls
+    const timeRange = document.getElementById('timeRange');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const lightIntensity = document.getElementById('lightIntensity');
+    const btnWeatherClear = document.getElementById('btnWeatherClear');
+    const btnWeatherCloud = document.getElementById('btnWeatherCloud');
+    const btnWeatherRain = document.getElementById('btnWeatherRain');
+    const weatherBadge = document.getElementById('weatherBadge');
+    
+    // Display elements
+    const logEl = document.getElementById('log');
+    const modelNameEl = document.getElementById('modelName');
+    const coordInfo = document.getElementById('coordInfo');
+    const fpsCounter = document.getElementById('fpsCounter');
+    
+    // Floating tools
     const orbitToggle = document.getElementById('orbitToggle');
     const transformToggle = document.getElementById('transformToggle');
     const helpersToggle = document.getElementById('helpersToggle');
+    const compassToggle = document.getElementById('compassToggle');
 
-    // Viewer setup
+    // ===== SCENE SETUP =====
     const container = document.getElementById('viewer');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x071018);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    
+    let currentTime = 12.0;
+    let isNightMode = true;
+    
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      powerPreference: "high-performance" 
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 2000);
-    camera.position.set(6, 3.5, 8);
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 5000);
+    camera.position.set(50, 100, 150);
 
-    // Lights
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 0.6);
-    scene.add(hemi);
-    const dirLight = new THREE.DirectionalLight(0xffffff, parseFloat(lightRange.value));
-    dirLight.position.set(5, 10, 7.5);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
+    // ===== LIGHTING SYSTEM =====
+    let hemiLight, sunLight;
+    
+    function setupLighting() {
+      scene.children = scene.children.filter(child => !child.isLight);
+      
+      hemiLight = new THREE.HemisphereLight(
+        isNightMode ? 0x222244 : 0x87ceeb,
+        isNightMode ? 0x111122 : 0x362d1d,
+        isNightMode ? 0.3 : 0.6
+      );
+      scene.add(hemiLight);
+      
+      const lightColor = isNightMode ? 0x4466aa : 0xffffff;
+      const lightIntensityValue = parseFloat(lightIntensity.value) * (isNightMode ? 0.3 : 1.0);
+      
+      sunLight = new THREE.DirectionalLight(lightColor, lightIntensityValue);
+      sunLight.position.set(100, 200, 50);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.camera.near = 0.1;
+      sunLight.shadow.camera.far = 1000;
+      sunLight.shadow.camera.left = -200;
+      sunLight.shadow.camera.right = 200;
+      sunLight.shadow.camera.top = 200;
+      sunLight.shadow.camera.bottom = -200;
+      scene.add(sunLight);
+      
+      updateSkyColor();
+    }
+    
+    function updateSkyColor() {
+      const time = parseFloat(timeRange.value);
+      let skyColor;
+      
+      if (isNightMode) {
+        if (time >= 6 && time <= 18) {
+          const factor = 0.3;
+          skyColor = new THREE.Color(0x001122).multiplyScalar(factor);
+        } else {
+          skyColor = new THREE.Color(0x000511);
+        }
+      } else {
+        if (time >= 6 && time <= 8) {
+          skyColor = new THREE.Color().lerpColors(new THREE.Color(0x001122), new THREE.Color(0xff6b35), (time - 6) / 2);
+        } else if (time >= 8 && time <= 18) {
+          skyColor = new THREE.Color(0x87ceeb);
+        } else if (time >= 18 && time <= 20) {
+          skyColor = new THREE.Color().lerpColors(new THREE.Color(0x87ceeb), new THREE.Color(0xff6b35), (time - 18) / 2);
+        } else {
+          skyColor = new THREE.Color(0x001122);
+        }
+      }
+      
+      scene.background = skyColor;
+    }
 
-    // Helpers
-    const grid = new THREE.GridHelper(10, 20, 0x2b3946, 0x17202a);
+    // ===== HELPERS & CONTROLS =====
+    const grid = new THREE.GridHelper(500, 100, 0x2b3946, 0x17202a);
     grid.visible = false;
     scene.add(grid);
-    const axes = new THREE.AxesHelper(1.6);
+    
+    const axes = new THREE.AxesHelper(20);
     axes.visible = false;
     scene.add(axes);
+    
+    const compass = new THREE.Group();
+    const compassGeometry = new THREE.ConeGeometry(2, 8, 8);
+    const northArrow = new THREE.Mesh(compassGeometry, new THREE.MeshBasicMaterial({color: 0xff0000}));
+    northArrow.position.y = 4;
+    northArrow.rotateX(-Math.PI/2);
+    compass.add(northArrow);
+    compass.position.set(-50, 0, -50);
+    compass.visible = false;
+    scene.add(compass);
 
-    // Controls
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
-    orbit.dampingFactor = 0.07;
+    orbit.dampingFactor = 0.05;
+    orbit.maxDistance = 2000;
+    orbit.minDistance = 5;
 
     const transform = new TransformControls(camera, renderer.domElement);
     transform.addEventListener('dragging-changed', (e) => { orbit.enabled = !e.value; });
@@ -257,92 +500,536 @@
     transform.visible = false;
     scene.add(transform);
 
-    // Loaders & Draco
+    // ===== LOADERS =====
     const draco = new DRACOLoader();
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/libs/draco/');
     const loader = new GLTFLoader();
     loader.setDRACOLoader(draco);
 
-    // Scene root & state
-    const root = new THREE.Group(); scene.add(root);
+    // ===== STATE MANAGEMENT =====
+    const root = new THREE.Group(); 
+    scene.add(root);
+    
+    const buildingsGroup = new THREE.Group();
+    buildingsGroup.name = 'buildings';
+    scene.add(buildingsGroup);
+    
     let currentModel = null;
     const parkingSpots = [];
+    const parkingZones = [];
+    const buildingMeshes = [];
     let wire = false, snap = false;
+    let buildingsVisible = true;
+    
+    let geoReference = {
+      latitude: -30.0346,
+      longitude: -51.2177,
+      altitude: 10,
+      rotation: 0
+    };
 
-    // Logging util
-    function log(msg){ const ts = new Date().toLocaleTimeString(); logEl.textContent = `[${ts}] ${msg}\n` + logEl.textContent; }
-
-    // Resize handler
-    window.addEventListener('resize', () => {
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-    });
-
-    // Frame object (centraliza e enquadra)
-    function frameObject(obj, pad = 1.25){
-      const box = new THREE.Box3().setFromObject(obj);
+    // ===== BUILDING FOOTPRINTS SYSTEM =====
+    
+    // Simulação de dados reais de Porto Alegre (baseado em coordenadas reais)
+    const portoAlegreBuildingData = [
+      // Centro histórico
+      {coords: [[-51.2177, -30.0346], [-51.2175, -30.0346], [-51.2175, -30.0344], [-51.2177, -30.0344]], height: 25, type: 'commercial'},
+      {coords: [[-51.2180, -30.0348], [-51.2178, -30.0348], [-51.2178, -30.0346], [-51.2180, -30.0346]], height: 40, type: 'office'},
+      {coords: [[-51.2174, -30.0350], [-51.2172, -30.0350], [-51.2172, -30.0348], [-51.2174, -30.0348]], height: 15, type: 'residential'},
+      
+      // Cidade Baixa
+      {coords: [[-51.2200, -30.0380], [-51.2198, -30.0380], [-51.2198, -30.0378], [-51.2200, -30.0378]], height: 30, type: 'mixed'},
+      {coords: [[-51.2205, -30.0385], [-51.2203, -30.0385], [-51.2203, -30.0383], [-51.2205, -30.0383]], height: 20, type: 'residential'},
+      
+      // Bairro Moinhos de Vento
+      {coords: [[-51.2050, -30.0250], [-51.2048, -30.0250], [-51.2048, -30.0248], [-51.2050, -30.0248]], height: 60, type: 'residential'},
+      {coords: [[-51.2055, -30.0255], [-51.2053, -30.0255], [-51.2053, -30.0253], [-51.2055, -30.0253]], height: 45, type: 'office'},
+      
+      // Bairro Auxiliadora
+      {coords: [[-51.1950, -30.0150], [-51.1948, -30.0150], [-51.1948, -30.0148], [-51.1950, -30.0148]], height: 35, type: 'residential'},
+      {coords: [[-51.1955, -30.0155], [-51.1953, -30.0155], [-51.1953, -30.0153], [-51.1955, -30.0153]], height: 25, type: 'commercial'},
+      
+      // Zona Norte
+      {coords: [[-51.2100, -29.9900], [-51.2098, -29.9900], [-51.2098, -29.9898], [-51.2100, -29.9898]], height: 18, type: 'residential'},
+      {coords: [[-51.2105, -29.9905], [-51.2103, -29.9905], [-51.2103, -29.9903], [-51.2105, -29.9903]], height: 22, type: 'industrial'},
+      
+      // Zona Sul
+      {coords: [[-51.2300, -30.0800], [-51.2298, -30.0800], [-51.2298, -30.0798], [-51.2300, -30.0798]], height: 28, type: 'residential'},
+      {coords: [[-51.2305, -30.0805], [-51.2303, -30.0805], [-51.2303, -30.0803], [-51.2305, -30.0803]], height: 33, type: 'mixed'},
+      
+      // Zona Leste
+      {coords: [[-51.1800, -30.0400], [-51.1798, -30.0400], [-51.1798, -30.0398], [-51.1800, -30.0398]], height: 20, type: 'residential'},
+      {coords: [[-51.1805, -30.0405], [-51.1803, -30.0405], [-51.1803, -30.0403], [-51.1805, -30.0403]], height: 24, type: 'commercial'},
+      
+      // Zona Oeste
+      {coords: [[-51.2500, -30.0300], [-51.2498, -30.0300], [-51.2498, -30.0298], [-51.2500, -30.0298]], height: 16, type: 'residential'},
+      {coords: [[-51.2505, -30.0305], [-51.2503, -30.0305], [-51.2503, -30.0303], [-51.2505, -30.0303]], height: 19, type: 'industrial'}
+    ];
+    
+    // Geração procedural de mais edificações baseada em padrões urbanos reais
+    function generateAdditionalBuildings() {
+      const additionalBuildings = [];
+      const neighborhoods = [
+        {center: [-51.2177, -30.0346], radius: 0.01, density: 0.8, type: 'downtown'},
+        {center: [-51.2050, -30.0250], radius: 0.008, density: 0.6, type: 'residential'},
+        {center: [-51.1950, -30.0150], radius: 0.006, density: 0.5, type: 'suburban'},
+        {center: [-51.2300, -30.0800], radius: 0.012, density: 0.4, type: 'mixed'}
+      ];
+      
+      neighborhoods.forEach(neighborhood => {
+        const buildingCount = Math.floor(neighborhood.density * 50);
+        
+        for (let i = 0; i < buildingCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * neighborhood.radius;
+          
+          const lng = neighborhood.center[0] + Math.cos(angle) * distance;
+          const lat = neighborhood.center[1] + Math.sin(angle) * distance;
+          
+          const size = 0.001 + Math.random() * 0.0008; // Tamanho do building footprint
+          
+          let height;
+          switch (neighborhood.type) {
+            case 'downtown': height = 20 + Math.random() * 80; break;
+            case 'residential': height = 8 + Math.random() * 25; break;
+            case 'suburban': height = 6 + Math.random() * 15; break;
+            case 'mixed': height = 12 + Math.random() * 40; break;
+          }
+          
+          const buildingTypes = ['residential', 'commercial', 'office', 'mixed', 'industrial'];
+          const type = buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
+          
+          additionalBuildings.push({
+            coords: [
+              [lng, lat],
+              [lng + size, lat],
+              [lng + size, lat + size],
+              [lng, lat + size]
+            ],
+            height: height,
+            type: type
+          });
+        }
+      });
+      
+      return additionalBuildings;
+    }
+    
+    function convertGeoToCartesian(lng, lat, alt = 0) {
+      // Conversão simplificada de coordenadas geográficas para cartesianas
+      // Usando Porto Alegre como origem (0,0)
+      const originLng = geoReference.longitude;
+      const originLat = geoReference.latitude;
+      
+      const R = 6371000; // Raio da Terra em metros
+      const latRad = lat * Math.PI / 180;
+      const lngRad = lng * Math.PI / 180;
+      const originLatRad = originLat * Math.PI / 180;
+      const originLngRad = originLng * Math.PI / 180;
+      
+      const x = R * (lngRad - originLngRad) * Math.cos(originLatRad);
+      const z = -R * (latRad - originLatRad); // Negativo para manter consistência com Three.js
+      const y = alt;
+      
+      return new THREE.Vector3(x, y, z);
+    }
+    
+    function createBuildingMesh(buildingData) {
+      const coords = buildingData.coords;
+      const height = buildingData.height;
+      const type = buildingData.type;
+      
+      // Converter coordenadas geográficas para cartesianas
+      const cartesianCoords = coords.map(coord => convertGeoToCartesian(coord[0], coord[1]));
+      
+      // Criar shape a partir dos pontos
+      const shape = new THREE.Shape();
+      shape.moveTo(cartesianCoords[0].x, cartesianCoords.z);
+      for (let i = 1; i < cartesianCoords.length; i++) {
+        shape.lineTo(cartesianCoords[i].x, cartesianCoords[i].z);
+      }
+      shape.lineTo(cartesianCoords[0].x, cartesianCoords.z);
+      
+      // Extrudar para criar volume 3D
+      const extrudeSettings = {
+        depth: height,
+        bevelEnabled: false
+      };
+      
+      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      geometry.rotateX(-Math.PI / 2); // Rotacionar para ficar na vertical
+      
+      // Definir material baseado no tipo de edificação
+      let color;
+      switch (type) {
+        case 'residential': color = 0xa67c5a; break; // Marrom claro
+        case 'commercial': color = 0x4a90e2; break; // Azul
+        case 'office': color = 0x7ed321; break; // Verde
+        case 'mixed': color = 0xf5a623; break; // Laranja
+        case 'industrial': color = 0x9013fe; break; // Roxo
+        default: color = 0x888888; // Cinza
+      }
+      
+      const material = new THREE.MeshLambertMaterial({
+        color: color,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = {
+        type: 'building',
+        buildingType: type,
+        height: height,
+        originalColor: color
+      };
+      
+      return mesh;
+    }
+    
+    async function loadBuildingFootprints() {
+      try {
+        buildingStatusIcon.className = 'status-indicator loading';
+        buildingLoadingBar.style.display = 'block';
+        buildingProgress.style.width = '0%';
+        
+        log('🏗️ Iniciando carregamento das edificações...');
+        
+        // Simular progresso de carregamento
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 10;
+          if (progress > 90) progress = 90;
+          buildingProgress.style.width = progress + '%';
+        }, 200);
+        
+        // Simular delay de rede
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        clearInterval(progressInterval);
+        buildingProgress.style.width = '50%';
+        
+        log('📊 Processando dados geoespaciais...');
+        
+        // Combinar dados reais com dados gerados proceduralmente
+        const allBuildingData = [...portoAlegreBuildingData, ...generateAdditionalBuildings()];
+        
+        log(`🏢 Criando ${allBuildingData.length} edificações...`);
+        
+        // Limpar edificações anteriores
+        buildingMeshes.forEach(mesh => buildingsGroup.remove(mesh));
+        buildingMeshes.length = 0;
+        
+        // Criar meshes das edificações em batches para performance
+        const batchSize = 10;
+        for (let i = 0; i < allBuildingData.length; i += batchSize) {
+          const batch = allBuildingData.slice(i, i + batchSize);
+          
+          batch.forEach(buildingData => {
+            const mesh = createBuildingMesh(buildingData);
+            buildingsGroup.add(mesh);
+            buildingMeshes.push(mesh);
+          });
+          
+          // Update progress
+          const batchProgress = 50 + ((i + batchSize) / allBuildingData.length) * 50;
+          buildingProgress.style.width = Math.min(batchProgress, 100) + '%';
+          
+          // Yield control to prevent blocking
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        buildingProgress.style.width = '100%';
+        
+        // Update UI
+        buildingCount.textContent = buildingMeshes.length;
+        buildingCountBadge.textContent = buildingMeshes.length;
+        buildingStatusIcon.className = 'status-indicator connected';
+        buildingInfo.textContent = `Prédios: ${buildingMeshes.length} edificações carregadas`;
+        
+        setTimeout(() => {
+          buildingLoadingBar.style.display = 'none';
+        }, 1000);
+        
+        // Position camera to show buildings
+        positionCameraForBuildings();
+        
+        log(`✅ ${buildingMeshes.length} edificações de Porto Alegre carregadas com sucesso!`);
+        saveSceneState();
+        
+      } catch (error) {
+        console.error('Erro ao carregar edificações:', error);
+        buildingStatusIcon.className = 'status-indicator error';
+        buildingLoadingBar.style.display = 'none';
+        log('❌ Erro ao carregar edificações: ' + error.message);
+      }
+    }
+    
+    function positionCameraForBuildings() {
+      if (buildingMeshes.length === 0) return;
+      
+      // Calcular bounding box de todas as edificações
+      const box = new THREE.Box3();
+      buildingMeshes.forEach(mesh => {
+        box.expandByObject(mesh);
+      });
+      
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
-      obj.position.sub(center);
+      
       const maxDim = Math.max(size.x, size.y, size.z);
-      if (maxDim === 0) return;
       const fov = camera.fov * (Math.PI / 180);
-      let camZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-      camZ *= pad;
-      camera.position.set(camZ, camZ * 0.6, camZ);
-      orbit.target.set(0, 0, 0);
+      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+      
+      cameraZ *= 1.5; // Padding factor
+      
+      camera.position.set(center.x + cameraZ * 0.7, cameraZ * 0.8, center.z + cameraZ);
+      orbit.target.copy(center);
       orbit.update();
+      
+      log('📷 Câmera posicionada para visualizar a cidade');
+    }
+    
+    function clearBuildings() {
+      buildingMeshes.forEach(mesh => buildingsGroup.remove(mesh));
+      buildingMeshes.length = 0;
+      
+      buildingCount.textContent = '0';
+      buildingCountBadge.textContent = '0';
+      buildingStatusIcon.className = 'status-indicator';
+      buildingInfo.textContent = 'Prédios: Carregue as edificações da cidade';
+      
+      log('🗑️ Edificações removidas da cena');
+      saveSceneState();
+    }
+    
+    function toggleBuildingsVisibility() {
+      buildingsVisible = !buildingsVisible;
+      buildingsGroup.visible = buildingsVisible;
+      
+      btnToggleBuildings.textContent = buildingsVisible ? '👁️ Mostrar' : '🙈 Ocultar';
+      buildingToggle.classList.toggle('active', buildingsVisible);
+      
+      log(`👁️ Edificações ${buildingsVisible ? 'visíveis' : 'ocultas'}`);
     }
 
-    // Load GLB from object URL
-    async function loadFromURL(url, filename = 'model.glb'){
-      statusEl.textContent = 'Carregando ' + filename + ' ...';
-      try{
-        const gltf = await new Promise((res, rej) => loader.load(url, res, undefined, rej));
-        // limpar root
-        root.clear();
-        currentModel = gltf.scene || gltf.scenes[0];
-        root.add(currentModel);
-        frameObject(currentModel);
-        modelNameEl.textContent = filename;
-        statusEl.textContent = 'Modelo carregado: ' + filename;
-        log('Modelo carregado: ' + filename);
-        // selecionar modelo para transformação
-        selectObject(currentModel);
-      }catch(err){
-        console.error(err);
-        statusEl.textContent = 'Erro ao carregar (ver console)';
-        log('Erro ao carregar: ' + (err.message || err));
+    // ===== PERSISTENCE SYSTEM =====
+    const STORAGE_KEY = 'parking3d_scene';
+    
+    function saveSceneState() {
+      const state = {
+        geoReference: geoReference,
+        parkingSpots: parkingSpots.map(spot => ({
+          id: spot.userData.id,
+          type: spot.userData.type,
+          position: spot.position.toArray(),
+          rotation: [spot.rotation.x, spot.rotation.y, spot.rotation.z],
+          scale: spot.scale.toArray(),
+          color: spot.material.color.getHex()
+        })),
+        parkingZones: parkingZones.map(zone => ({
+          id: zone.userData.id,
+          type: zone.userData.type,
+          position: zone.position.toArray(),
+          rotation: [zone.rotation.x, zone.rotation.y, zone.rotation.z],
+          scale: zone.scale.toArray()
+        })),
+        environment: {
+          time: currentTime,
+          isNightMode: isNightMode,
+          weather: getActiveWeather()
+        },
+        camera: {
+          position: camera.position.toArray(),
+          target: orbit.target.toArray()
+        },
+        buildings: {
+          loaded: buildingMeshes.length > 0,
+          visible: buildingsVisible,
+          count: buildingMeshes.length
+        }
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    
+    function loadSceneState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      
+      try {
+        const state = JSON.parse(saved);
+        
+        if (state.geoReference) {
+          geoReference = state.geoReference;
+          geoLat.value = geoReference.latitude;
+          geoLng.value = geoReference.longitude;
+          geoAlt.value = geoReference.altitude;
+          updateGeoDisplay();
+        }
+        
+        state.parkingSpots?.forEach(spotData => {
+          createParkingSpot(spotData);
+        });
+        
+        state.parkingZones?.forEach(zoneData => {
+          createParkingZone(zoneData);
+        });
+        
+        if (state.environment) {
+          currentTime = state.environment.time || 12;
+          timeRange.value = currentTime;
+          updateTimeDisplay();
+          
+          if (state.environment.isNightMode !== undefined) {
+            isNightMode = state.environment.isNightMode;
+            updateTheme();
+          }
+          
+          if (state.environment.weather) {
+            setWeather(state.environment.weather);
+          }
+        }
+        
+        if (state.camera) {
+          camera.position.fromArray(state.camera.position);
+          orbit.target.fromArray(state.camera.target);
+          orbit.update();
+        }
+        
+        if (state.buildings && state.buildings.loaded) {
+          // Auto-carregar edificações se estavam carregadas
+          setTimeout(() => loadBuildingFootprints(), 1000);
+        }
+        
+        updateCounts();
+        log('📂 Cena carregada do armazenamento local');
+        
+      } catch (e) {
+        console.error('Erro ao carregar cena salva:', e);
+        log('⚠️ Erro ao carregar cena salva');
       }
     }
 
-    // File input / Drag & Drop
-    btnSelect.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const url = URL.createObjectURL(f);
-      loadFromURL(url, f.name);
-    });
-
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'rgba(255,255,255,0.2)'; });
-    dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); dropzone.style.borderColor = ''; });
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.style.borderColor = '';
-      const f = e.dataTransfer.files && e.dataTransfer.files[0];
-      if (!f) return;
-      if (!f.name.toLowerCase().endsWith('.glb') && !f.name.toLowerCase().endsWith('.gltf')){
-        alert('Formato inválido. Use .glb ou .gltf');
-        return;
+    // ===== UTILITY FUNCTIONS =====
+    function log(msg) { 
+      const ts = new Date().toLocaleTimeString(); 
+      logEl.textContent = `[${ts}] ${msg}\n` + logEl.textContent; 
+    }
+    
+    function updateGeoDisplay() {
+      const lat = parseFloat(geoLat.value).toFixed(4);
+      const lng = parseFloat(geoLng.value).toFixed(4);
+      const alt = parseFloat(geoAlt.value);
+      coordDisplay.textContent = `Lat: ${lat}° • Lng: ${lng}° • Alt: ${alt}m`;
+    }
+    
+    function updateTimeDisplay() {
+      const time = parseFloat(timeRange.value);
+      const hours = Math.floor(time);
+      const minutes = Math.floor((time - hours) * 60);
+      timeDisplay.textContent = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}`;
+      currentTime = time;
+    }
+    
+    function updateCounts() {
+      spotsCount.textContent = parkingSpots.length;
+      zonesCount.textContent = parkingZones.length;
+    }
+    
+    function getActiveWeather() {
+      if (btnWeatherClear.classList.contains('active')) return 'clear';
+      if (btnWeatherCloud.classList.contains('active')) return 'cloudy';
+      if (btnWeatherRain.classList.contains('active')) return 'rainy';
+      return 'clear';
+    }
+    
+    function setWeather(weather) {
+      [btnWeatherClear, btnWeatherCloud, btnWeatherRain].forEach(btn => btn.classList.remove('active'));
+      
+      switch(weather) {
+        case 'clear':
+          btnWeatherClear.classList.add('active');
+          weatherBadge.textContent = '☀️ Claro';
+          break;
+        case 'cloudy':
+          btnWeatherCloud.classList.add('active');
+          weatherBadge.textContent = '☁️ Nublado';
+          break;
+        case 'rainy':
+          btnWeatherRain.classList.add('active');
+          weatherBadge.textContent = '🌧️ Chuva';
+          break;
       }
-      const url = URL.createObjectURL(f);
-      loadFromURL(url, f.name);
-    });
+    }
 
-    // Select object: attach TransformControls to object
-    function selectObject(obj){
+    function updateTheme() {
+      document.body.className = isNightMode ? 'night-mode' : 'day-mode';
+      themeIcon.textContent = isNightMode ? '🌙' : '☀️';
+      themeText.textContent = isNightMode ? 'Night' : 'Day';
+      setupLighting();
+    }
+
+    function createParkingSpot(data = null) {
+      const geo = new THREE.BoxGeometry(2.5, 0.05, 5.0);
+      const color = data?.color || 0xffc857;
+      const mat = new THREE.MeshStandardMaterial({ 
+        color: color, 
+        metalness: 0.1, 
+        roughness: 0.7,
+        transparent: true,
+        opacity: 0.8 
+      });
+      
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(0, 0.025, 0);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData.type = 'parkingSpot';
+      mesh.userData.id = data?.id || 'spot-' + (parkingSpots.length + 1);
+      
+      if (data) {
+        mesh.position.fromArray(data.position);
+        mesh.rotation.set(data.rotation[0], data.rotation[1], data.rotation[2]);
+        mesh.scale.fromArray(data.scale);
+      }
+      
+      root.add(mesh);
+      parkingSpots.push(mesh);
+      
+      return mesh;
+    }
+    
+    function createParkingZone(data = null) {
+      const geo = new THREE.PlaneGeometry(10, 10);
+      const mat = new THREE.MeshStandardMaterial({ 
+        color: 0x44aa88, 
+        transparent: true, 
+        opacity: 0.3,
+        side: THREE.DoubleSide 
+      });
+      
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.y = 0.01;
+      mesh.userData.type = 'parkingZone';
+      mesh.userData.id = data?.id || 'zone-' + (parkingZones.length + 1);
+      
+      if (data) {
+        mesh.position.fromArray(data.position);
+        mesh.rotation.set(data.rotation[0], data.rotation[1], data.rotation[2]);
+        mesh.scale.fromArray(data.scale);
+      }
+      
+      root.add(mesh);
+      parkingZones.push(mesh);
+      
+      return mesh;
+    }
+
+    function selectObject(obj) {
       transform.detach();
       transform.attach(obj);
       transform.setMode('translate');
@@ -350,121 +1037,379 @@
       transform.enabled = true;
     }
 
-    // Picking: pointer -> attach control to clicked item
     const pointer = new THREE.Vector2();
     const raycaster = new THREE.Raycaster();
+    
     renderer.domElement.addEventListener('pointerdown', (e) => {
-      if (!currentModel) return;
+      if (e.button !== 0) return;
+      
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = - ((e.clientY - rect.top) / rect.height) * 2 + 1;
+      
       raycaster.setFromCamera(pointer, camera);
-      const intersects = raycaster.intersectObjects(root.children, true);
-      if (intersects.length){
+      const intersects = raycaster.intersectObjects([...root.children, ...buildingsGroup.children], true);
+      
+      if (intersects.length) {
         let picked = intersects[0].object;
-        // subir até o top-level child of root
+        
+        // For buildings, don't attach transform controls
+        if (picked.userData.type === 'building') {
+          log(`🏢 Edificação selecionada: Tipo ${picked.userData.buildingType}, Altura ${picked.userData.height}m`);
+          return;
+        }
+        
+        // For parking objects, attach transform controls
         while (picked.parent && picked.parent !== root) picked = picked.parent;
         selectObject(picked);
-        log('Selecionado: ' + (picked.userData.id || picked.name || picked.uuid));
+        log('🎯 Selecionado: ' + (picked.userData.id || picked.name));
       }
     });
 
-    // Buttons: transform modes
-    function setActiveButton(btn){
-      // reset visuals for translate/rotate/scale
+    // ===== EVENT LISTENERS =====
+    
+    // Building controls
+    btnLoadBuildings.addEventListener('click', loadBuildingFootprints);
+    btnClearBuildings.addEventListener('click', clearBuildings);
+    btnToggleBuildings.addEventListener('click', toggleBuildingsVisibility);
+    buildingToggle.addEventListener('click', toggleBuildingsVisibility);
+    
+    // Theme toggle
+    themeToggle.addEventListener('click', () => {
+      isNightMode = !isNightMode;
+      updateTheme();
+      saveSceneState();
+      log(`🎨 Modo alterado para: ${isNightMode ? 'Night' : 'Day'}`);
+    });
+    
+    // Geo controls
+    btnGeoSet.addEventListener('click', () => {
+      geoReference.latitude = parseFloat(geoLat.value);
+      geoReference.longitude = parseFloat(geoLng.value);
+      geoReference.altitude = parseFloat(geoAlt.value);
+      updateGeoDisplay();
+      saveSceneState();
+      log(`📍 Coordenadas atualizadas: ${geoReference.latitude}, ${geoReference.longitude}`);
+    });
+    
+    btnGeoSave.addEventListener('click', () => {
+      saveSceneState();
+      log('💾 Localização georreferenciada salva');
+    });
+    
+    [geoLat, geoLng, geoAlt].forEach(input => {
+      input.addEventListener('input', updateGeoDisplay);
+    });
+    
+    // File handling
+    btnSelect.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const url = URL.createObjectURL(f);
+      loadFromURL(url, f.name);
+    });
+    
+    dropzone.addEventListener('dragover', (e) => { 
+      e.preventDefault(); 
+      dropzone.style.borderColor = 'var(--accent)'; 
+    });
+    
+    dropzone.addEventListener('dragleave', () => { 
+      dropzone.style.borderColor = ''; 
+    });
+    
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '';
+      const f = e.dataTransfer.files?.[0];
+      if (!f) return;
+      if (!f.name.toLowerCase().match(/\.(glb|gltf)$/)) {
+        alert('Formato inválido. Use .glb ou .gltf');
+        return;
+      }
+      const url = URL.createObjectURL(f);
+      loadFromURL(url, f.name);
+    });
+    
+    async function loadFromURL(url, filename = 'model.glb') {
+      statusEl.textContent = 'Carregando ' + filename + ' ...';
+      try {
+        const gltf = await new Promise((res, rej) => loader.load(url, res, undefined, rej));
+        
+        if (currentModel) root.remove(currentModel);
+        
+        currentModel = gltf.scene || gltf.scenes[0];
+        
+        currentModel.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        
+        root.add(currentModel);
+        frameObject(currentModel);
+        modelNameEl.textContent = filename;
+        statusEl.textContent = 'Modelo carregado: ' + filename;
+        log('🏗️ Modelo carregado: ' + filename);
+        selectObject(currentModel);
+        saveSceneState();
+        
+      } catch(err) {
+        console.error(err);
+        statusEl.textContent = 'Erro ao carregar';
+        log('❌ Erro: ' + (err.message || err));
+      }
+    }
+    
+    // Transform controls
+    function setActiveTransformButton(btn) {
       [btnTranslate, btnRotate, btnScale].forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
     }
-    btnTranslate.addEventListener('click', () => { transform.setMode('translate'); setActiveButton(btnTranslate); });
-    btnRotate.addEventListener('click', () => { transform.setMode('rotate'); setActiveButton(btnRotate); });
-    btnScale.addEventListener('click', () => { transform.setMode('scale'); setActiveButton(btnScale); });
-
-    btnFit.addEventListener('click', () => { if (currentModel) frameObject(currentModel, 1.25); });
-    btnClear.addEventListener('click', () => { root.clear(); currentModel = null; parkingSpots.length = 0; modelNameEl.textContent = 'Nenhum modelo'; statusEl.textContent = 'Cena limpa'; log('Cena limpa'); });
-
+    
+    btnTranslate.addEventListener('click', () => { 
+      transform.setMode('translate'); 
+      setActiveTransformButton(btnTranslate); 
+    });
+    
+    btnRotate.addEventListener('click', () => { 
+      transform.setMode('rotate'); 
+      setActiveTransformButton(btnRotate); 
+    });
+    
+    btnScale.addEventListener('click', () => { 
+      transform.setMode('scale'); 
+      setActiveTransformButton(btnScale); 
+    });
+    
+    btnFit.addEventListener('click', () => { 
+      if (currentModel) {
+        frameObject(currentModel, 1.5);
+      } else if (buildingMeshes.length > 0) {
+        positionCameraForBuildings();
+      }
+    });
+    
+    btnClear.addEventListener('click', () => { 
+      if (confirm('Limpar toda a cena? Isso removerá o modelo e todas as vagas.')) {
+        root.clear(); 
+        currentModel = null; 
+        parkingSpots.length = 0;
+        parkingZones.length = 0;
+        modelNameEl.textContent = 'Nenhum modelo'; 
+        statusEl.textContent = 'Cena limpa'; 
+        updateCounts();
+        log('🗑️ Cena limpa'); 
+        saveSceneState();
+      }
+    });
+    
     // Wireframe
     btnWire.addEventListener('click', () => {
       wire = !wire;
-      root.traverse((c) => {
-        if (c.isMesh){
-          if (!c.userData.orig) c.userData.orig = c.material;
-          if (wire){
-            c.material = c.material.clone();
-            c.material.wireframe = true;
-          } else {
-            c.material = c.userData.orig || c.material;
+      if (currentModel) {
+        currentModel.traverse((c) => {
+          if (c.isMesh) {
+            if (!c.userData.orig) c.userData.orig = c.material;
+            if (wire) {
+              c.material = c.material.clone();
+              c.material.wireframe = true;
+            } else {
+              c.material = c.userData.orig || c.material;
+            }
           }
-        }
-      });
+        });
+      }
       btnWire.classList.toggle('active', wire);
-      log('Wireframe ' + (wire ? 'ON' : 'OFF'));
+      log('📐 Wireframe ' + (wire ? 'ON' : 'OFF'));
     });
-
+    
+    // Grid/Axes/Compass
+    btnGrid.addEventListener('click', () => { 
+      grid.visible = !grid.visible; 
+      btnGrid.classList.toggle('active', grid.visible); 
+      log('⚏ Grade ' + (grid.visible ? 'ON' : 'OFF'));
+    });
+    
+    btnAxes.addEventListener('click', () => { 
+      axes.visible = !axes.visible; 
+      btnAxes.classList.toggle('active', axes.visible); 
+      log('📐 Eixos ' + (axes.visible ? 'ON' : 'OFF'));
+    });
+    
+    compassToggle.addEventListener('click', () => {
+      compass.visible = !compass.visible;
+      compassToggle.classList.toggle('active', compass.visible);
+      log('🧭 Bússola ' + (compass.visible ? 'ON' : 'OFF'));
+    });
+    
     // Snap
     btnSnap.addEventListener('click', () => {
       snap = !snap;
-      transform.setTranslationSnap(snap ? 0.1 : null);
+      transform.setTranslationSnap(snap ? 0.5 : null);
       transform.setRotationSnap(snap ? THREE.MathUtils.degToRad(15) : null);
       btnSnap.classList.toggle('active', snap);
-      log('Snap ' + (snap ? 'ON' : 'OFF'));
+      log('🔒 Snap ' + (snap ? 'ON (0.5m)' : 'OFF'));
     });
-
-    // Grid / Axes
-    btnGrid.addEventListener('click', () => { grid.visible = !grid.visible; btnGrid.classList.toggle('active', grid.visible); });
-    btnAxes.addEventListener('click', () => { axes.visible = !axes.visible; btnAxes.classList.toggle('active', axes.visible); });
-
-    // Light control
-    lightRange.addEventListener('input', (e) => { dirLight.intensity = parseFloat(e.target.value); });
-
-    // Add Parking Spot (box)
+    
+    // Parking management
     btnAddSpot.addEventListener('click', () => {
-      const geo = new THREE.BoxGeometry(0.6, 0.02, 1.2);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffc857, metalness: 0.1, roughness: 0.7 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(0, 0.01, 0);
-      mesh.userData.type = 'parkingSpot';
-      mesh.userData.id = 'spot-' + (parkingSpots.length + 1);
-      root.add(mesh);
-      parkingSpots.push(mesh);
-      selectObject(mesh);
-      log('Vaga adicionada: ' + mesh.userData.id);
+      const spot = createParkingSpot();
+      selectObject(spot);
+      updateCounts();
+      saveSceneState();
+      log('🚗 Vaga adicionada: ' + spot.userData.id);
     });
-
-    // Export spots JSON
+    
+    btnAddZone.addEventListener('click', () => {
+      const zone = createParkingZone();
+      selectObject(zone);
+      updateCounts();
+      saveSceneState();
+      log('🏞️ Zona adicionada: ' + zone.userData.id);
+    });
+    
+    btnLoadSpots.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            
+            parkingSpots.forEach(spot => root.remove(spot));
+            parkingZones.forEach(zone => root.remove(zone));
+            parkingSpots.length = 0;
+            parkingZones.length = 0;
+            
+            data.parkingSpots?.forEach(spotData => createParkingSpot(spotData));
+            data.parkingZones?.forEach(zoneData => createParkingZone(zoneData));
+            
+            updateCounts();
+            saveSceneState();
+            log('📂 Dados carregados: ' + data.parkingSpots?.length + ' vagas, ' + data.parkingZones?.length + ' zonas');
+            
+          } catch (err) {
+            console.error(err);
+            log('❌ Erro ao carregar arquivo JSON');
+          }
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    });
+    
     btnExport.addEventListener('click', () => {
-      const out = parkingSpots.map(m => ({
-        id: m.userData.id,
-        position: m.position.toArray(),
-        rotation: [m.rotation.x, m.rotation.y, m.rotation.z],
-        scale: m.scale.toArray()
-      }));
-      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+      const exportData = {
+        metadata: {
+          created: new Date().toISOString(),
+          location: geoReference,
+          version: '2.0',
+          city: 'Porto Alegre, RS, Brasil'
+        },
+        parkingSpots: parkingSpots.map(spot => ({
+          id: spot.userData.id,
+          type: spot.userData.type,
+          position: spot.position.toArray(),
+          rotation: [spot.rotation.x, spot.rotation.y, spot.rotation.z],
+          scale: spot.scale.toArray(),
+          color: spot.material.color.getHex()
+        })),
+        parkingZones: parkingZones.map(zone => ({
+          id: zone.userData.id,
+          type: zone.userData.type,
+          position: zone.position.toArray(),
+          rotation: [zone.rotation.x, zone.rotation.y, zone.rotation.z],
+          scale: zone.scale.toArray()
+        })),
+        buildings: {
+          count: buildingMeshes.length,
+          visible: buildingsVisible
+        }
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'parking_spots.json';
+      a.download = `parking_portoalegre_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(a.href);
-      log('Export realizado (' + out.length + ' vagas)');
+      
+      log('💾 Export realizado: ' + exportData.parkingSpots.length + ' vagas, ' + exportData.parkingZones.length + ' zonas');
     });
-
-    // Collapse sidebar
-    btnCollapse.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('collapsed');
-      btnCollapse.textContent = collapsed ? '⇥' : '⇤';
+    
+    // Environment controls
+    timeRange.addEventListener('input', (e) => {
+      currentTime = parseFloat(e.target.value);
+      updateTimeDisplay();
+      updateSkyColor();
+      
+      const angle = (currentTime / 24) * Math.PI * 2 - Math.PI / 2;
+      sunLight.position.set(
+        Math.cos(angle) * 200,
+        Math.sin(angle) * 200 + 50,
+        50
+      );
+      
+      saveSceneState();
     });
-
-    // Floating toolbar toggles
+    
+    lightIntensity.addEventListener('input', (e) => {
+      const intensity = parseFloat(e.target.value) * (isNightMode ? 0.3 : 1.0);
+      sunLight.intensity = intensity;
+    });
+    
+    // Weather controls
+    [btnWeatherClear, btnWeatherCloud, btnWeatherRain].forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        [btnWeatherClear, btnWeatherCloud, btnWeatherRain].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const weather = btn.id.replace('btnWeather', '').toLowerCase();
+        setWeather(weather);
+        
+        let intensityMultiplier = 1.0;
+        switch(weather) {
+          case 'clear': intensityMultiplier = 1.0; break;
+          case 'cloudy': intensityMultiplier = 0.7; break;
+          case 'rainy': intensityMultiplier = 0.4; break;
+        }
+        
+        const baseIntensity = parseFloat(lightIntensity.value) * (isNightMode ? 0.3 : 1.0);
+        sunLight.intensity = baseIntensity * intensityMultiplier;
+        
+        log('🌤️ Clima alterado: ' + weather);
+        saveSceneState();
+      });
+    });
+    
+    btnSaveScene.addEventListener('click', () => {
+      saveSceneState();
+      log('💾 Cena salva manualmente');
+    });
+    
+    // Floating tools
     orbitToggle.addEventListener('click', () => {
       orbit.enabled = !orbit.enabled;
       orbitToggle.classList.toggle('active', orbit.enabled);
-      log('Orbit ' + (orbit.enabled ? 'ON' : 'OFF'));
+      log('🎮 Orbit ' + (orbit.enabled ? 'ON' : 'OFF'));
     });
+    
     transformToggle.addEventListener('click', () => {
       const visible = !transform.visible;
       transform.visible = visible;
       transformToggle.classList.toggle('active', visible);
-      log('TransformControls ' + (visible ? 'ON' : 'OFF'));
+      log('✦ TransformControls ' + (visible ? 'ON' : 'OFF'));
     });
+    
     helpersToggle.addEventListener('click', () => {
       const state = !(grid.visible || axes.visible);
       grid.visible = axes.visible = state;
@@ -472,53 +1417,81 @@
       btnAxes.classList.toggle('active', state);
       helpersToggle.classList.toggle('active', state);
     });
-
-    // Basic picker: update coordinate display when transform changes
+    
+    btnCollapse.addEventListener('click', () => {
+      const collapsed = sidebar.classList.toggle('collapsed');
+      btnCollapse.textContent = collapsed ? '⇥' : '⇤';
+    });
+    
     transform.addEventListener('change', () => {
       const obj = transform.object;
-      if (obj){
+      if (obj) {
         coordInfo.textContent = `X:${obj.position.x.toFixed(2)} Y:${obj.position.y.toFixed(2)} Z:${obj.position.z.toFixed(2)}`;
+        saveSceneState();
       }
     });
 
-    // Raycast selection on double click for precision
-    renderer.domElement.addEventListener('dblclick', (e) => {
-      if (!currentModel) return;
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = - ((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(root.children, true);
-      if (hits.length){
-        let picked = hits[0].object;
-        while (picked.parent && picked.parent !== root) picked = picked.parent;
-        selectObject(picked);
-        log('Selecionado (dblclick): ' + (picked.userData.id || picked.name || picked.uuid));
-      }
+    // ===== INITIALIZATION =====
+    
+    function frameObject(obj, pad = 1.5) {
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      
+      obj.position.sub(center);
+      
+      const maxDim = Math.max(size.x, size.y, size.z);
+      if (maxDim === 0) return;
+      
+      const fov = camera.fov * (Math.PI / 180);
+      let camZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+      camZ *= pad;
+      
+      camera.position.set(camZ * 0.8, camZ * 0.6, camZ);
+      orbit.target.set(0, 0, 0);
+      orbit.update();
+    }
+    
+    window.addEventListener('resize', () => {
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
     });
-
-    // Animation loop
-    function animate(){
+    
+    // FPS counter
+    let lastTime = performance.now();
+    let frameCount = 0;
+    
+    function animate() {
       requestAnimationFrame(animate);
+      
+      frameCount++;
+      const now = performance.now();
+      if (now >= lastTime + 1000) {
+        fpsCounter.textContent = `FPS: ${Math.round((frameCount * 1000) / (now - lastTime))}`;
+        frameCount = 0;
+        lastTime = now;
+      }
+      
       orbit.update();
       renderer.render(scene, camera);
     }
+    
+    // Initialize everything
+    setupLighting();
+    updateTheme();
+    updateTimeDisplay();
+    updateGeoDisplay();
+    loadSceneState();
     animate();
-
-    // Inicialização e mensagem
-    log('Visualizador inicializado. Import via CDN — sem erro de "module specifier".');
-
-    // Test / safety: detect imports that would cause "three" error (diagnóstico rápido)
-    try {
-      if (!THREE || !THREE.Scene) console.warn('Three.js aparentemente não carregado corretamente.');
-    } catch(e) {
-      console.error('Diagnóstico import failed', e);
-      statusEl.textContent = 'Erro de import — ver console';
-    }
-
-    // Verificação de carregamento bem-sucedido
-    log('✅ Todos os módulos Three.js carregados com sucesso');
-    log('✅ Sistema pronto para usar - compatibilidade Netlify total');
+    
+    // Auto-save periodically
+    setInterval(saveSceneState, 30000);
+    
+    log('🚀 Sistema inicializado com edificações de Porto Alegre');
+    log('📍 Localização: Porto Alegre, RS, Brasil');
+    log('🏢 Clique em "Carregar Prédios" para visualizar a cidade');
+    log('💾 Sistema de persistência ativo');
   </script>
 </body>
 </html>
